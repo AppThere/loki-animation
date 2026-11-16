@@ -82,6 +82,8 @@ val PANEL_COMMANDS: Set<String> = setOf(
     "file.open", "file.save", "file.save_as", "file.export_png", "layer.select", "layer.toggle_visible", "layer.toggle_lock", "layer.new", "layer.delete", "timeline.goto",
     "timeline.first_frame", "timeline.prev_frame", "timeline.next_frame", "timeline.last_frame", "timeline.insert_keyframe", "element.pick", "element.translate",
     "element.set_fill", "draw.rect", "draw.ellipse", "draw.star", "draw.line", "library.place", "scene.new", "control.test_movie", "doc.set_stage",
+    "timeline.insert_frame", "timeline.remove_frame", "timeline.insert_blank_keyframe", "timeline.clear_keyframe", "timeline.create_motion_tween", "timeline.create_tween",
+    "timeline.create_shape_tween", "timeline.remove_tween", "timeline.set_easing", "timeline.move_spans", "timeline.resize_span",
 )
 
 val FIRST_PANEL: String? = "layers"

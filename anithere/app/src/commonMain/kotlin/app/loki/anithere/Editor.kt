@@ -83,16 +83,42 @@ fun Editor(native: SurfaceEngine, revision: Int, modifier: Modifier) {
             image = native.renderPage(0, scale)?.let { rgbaToImageBitmap(it.width, it.height, it.rgba) } ?: image
         }
     }
+    var playing by remember { mutableStateOf(false) }
+    var loop by remember { mutableStateOf(true) }
+    val frames = (d.long("frames") ?: 24L).coerceAtLeast(1L)
+    val frame = d.long("frame") ?: 0L
+    val fps = d.obj()?.get("stage").num("fps") ?: 24.0
+    // Playback: each frame is gone to and waited for, so a slow render slows the playback and never queues up.
+    LaunchedEffect(playing, fps, frames, loop) {
+        val w = ws ?: return@LaunchedEffect
+        if (!playing) return@LaunchedEffect
+        var f = frame
+        val per = frameMillis(fps)
+        while (playing) {
+            val started = kotlin.time.TimeSource.Monotonic.markNow()
+            f = nextFrame(f, frames, loop) ?: run { playing = false; return@LaunchedEffect }
+            w.goto(f)
+            kotlinx.coroutines.delay((per - started.elapsedNow().inWholeMilliseconds).coerceAtLeast(1L))
+        }
+    }
     Column(modifier.background(MaterialTheme.colorScheme.background)) {
-        Box(Modifier.fillMaxWidth().weight(0.62f)) {
+        Box(Modifier.fillMaxWidth().weight(0.58f)) {
             ArtCanvas(
                 page, image, view, onInput = { input -> ws?.let { tools.onInput(input, it) } }, modifier = Modifier.fillMaxSize(),
                 panTool = ws?.tool == "Hand", overlay = { v -> with(tools) { draw(v) } },
             )
         }
+        if (ws != null) TimelineBar(ws, frame, frames, fps, playing, loop, { playing = it }, { loop = it })
         LaneTimeline(
             lanesOf(ws?.state), total = (d.long("frames") ?: 24L).toDouble().coerceAtLeast(24.0), playhead = (d.long("frame") ?: 0L).toDouble() + 0.5,
-            modifier = Modifier.fillMaxWidth().weight(0.38f), steps = FRAME_STEPS, ruler = { t, _ -> "${t.toLong() + 1}" },
+            modifier = Modifier.fillMaxWidth().weight(0.42f), steps = FRAME_STEPS, snap = 1.0,
+            onDragClip = { lane, clip, kind, delta, _ ->
+                val start = clip.start.toLong()
+                when (kind) {
+                    app.loki.kit.ClipDrag.Move -> ws?.command("timeline.move_spans", buildJsonObject { put("layer", lane.id); put("from", start); put("by", delta.toLong()) })
+                    app.loki.kit.ClipDrag.ResizeEnd -> ws?.command("timeline.resize_span", buildJsonObject { put("layer", lane.id); put("frame", start); put("frames", (clip.end - clip.start + delta).toLong().coerceAtLeast(1L)) })
+                }
+            }, ruler = { t, _ -> "${t.toLong() + 1}" },
             onSeek = { t -> ws?.run?.invoke("timeline.goto", buildJsonObject { put("frame", t.toLong().coerceAtLeast(0L)) }) {} },
             onTap = { lane, _, at ->
                 val w = ws ?: return@LaneTimeline
