@@ -93,11 +93,11 @@ fun Editor(native: SurfaceEngine, revision: Int, modifier: Modifier) {
         LaneTimeline(
             lanesOf(ws?.state), total = (d.long("frames") ?: 24L).toDouble().coerceAtLeast(24.0), playhead = (d.long("frame") ?: 0L).toDouble() + 0.5,
             modifier = Modifier.fillMaxWidth().weight(0.38f), steps = FRAME_STEPS, ruler = { t, _ -> "${t.toLong() + 1}" },
-            onSeek = { t -> ws?.run?.invoke("engine.execute", buildJsonObject { put("command", "timeline.goto"); put("params", buildJsonObject { put("frame", t.toLong().coerceAtLeast(0L)) }) }) {} },
+            onSeek = { t -> ws?.run?.invoke("timeline.goto", buildJsonObject { put("frame", t.toLong().coerceAtLeast(0L)) }) {} },
             onTap = { lane, _, at ->
                 val w = ws ?: return@LaneTimeline
-                w.run("engine.execute", buildJsonObject { put("command", "layer.select"); put("params", buildJsonObject { put("layer", lane.id) }) }) {
-                    w.run("engine.execute", buildJsonObject { put("command", "timeline.goto"); put("params", buildJsonObject { put("frame", at.toLong().coerceAtLeast(0L)) }) }) {}
+                w.run("layer.select", buildJsonObject { put("layer", lane.id) }) {
+                    w.run("timeline.goto", buildJsonObject { put("frame", at.toLong().coerceAtLeast(0L)) }) {}
                 }
             },
         )
@@ -114,7 +114,7 @@ class StageTools {
         val p = i.points.lastOrNull() ?: return
         val at = Offset(p.x.toFloat(), p.y.toFloat())
         fun run(command: String, params: kotlinx.serialization.json.JsonObject, then: () -> Unit = {}) =
-            ws.run("engine.execute", buildJsonObject { put("command", command); put("params", params) }) { then() }
+            ws.run(command, params) { then() }
         when (i.phase) {
             CanvasPhase.Down -> { down = at; now = at; picked = false }
             CanvasPhase.Drag -> now = at
