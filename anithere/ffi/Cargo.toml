@@ -1,0 +1,23 @@
+[package]
+name = "loki-ffi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "C ABI over the AniCraft engine for the AniThere Kotlin Multiplatform front end"
+
+[lib]
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[dependencies]
+anicraft-engine = { path = "../../crates/engine" }
+anicraft-render = { path = "../../crates/render" }
+anicraft-doc = { path = "../../crates/doc" }
+serde_json = "1"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+unimplemented = "deny"
+todo = "deny"
+unreachable = "deny"
