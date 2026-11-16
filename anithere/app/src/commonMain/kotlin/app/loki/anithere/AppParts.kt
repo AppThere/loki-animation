@@ -120,7 +120,7 @@ object Paint {
 }
 
 private fun exec(run: (String, JsonObject) -> Unit, command: String, params: JsonObject = JsonObject(emptyMap())) =
-    run("engine.execute", buildJsonObject { put("command", command); put("params", params) })
+    run(command, params)
 
 /** The playhead and the keyframe and layer actions, and the colours new shapes get. */
 @Composable
